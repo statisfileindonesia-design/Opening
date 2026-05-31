@@ -1,10 +1,11 @@
+
 [
-     {
-       "relation": ["delegate_permission/common.handle_all_urls"],
-       "target": {
-         "namespace": "android_app",
-         "package_name": "com.clicks.app",
-         "sha256_cert_fingerprints": ["36:82:4A:6F:A3:E5:8C:58:0D:0C:EB:8E:7A:58:C0:AB:8A:3C:52:36:03:A3:FE:E3:BC:70:02:A2:69:A2:9C:B9"]
-       }
-     }
-   ]
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.clicks.app",
+      "sha256_cert_fingerprints": ["08:17:64:BA:6B:A3:44:D7:B4:07:8B:36:EC:CE:4D:A8:54:5E:A7:41:85:65:D6:01:53:73:63:A0:73:DB:43:FC"]
+    }
+  }
+]
