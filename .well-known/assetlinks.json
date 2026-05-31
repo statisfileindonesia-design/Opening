@@ -1,0 +1,10 @@
+[
+     {
+       "relation": ["delegate_permission/common.handle_all_urls"],
+       "target": {
+         "namespace": "android_app",
+         "package_name": "com.clicks.app",
+         "sha256_cert_fingerprints": ["36:82:4A:6F:A3:E5:8C:58:0D:0C:EB:8E:7A:58:C0:AB:8A:3C:52:36:03:A3:FE:E3:BC:70:02:A2:69:A2:9C:B9"]
+       }
+     }
+   ]
