@@ -2,24 +2,42 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>CLICKS - OPENING (ATARI BULL)</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>CLICKS • Nonton Film</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
   <style>
+    /* RESET & GLOBAL */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+    html, body {
+      height: 100%;
+      background: #000;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      color: #fff;
+      overscroll-behavior-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
     body {
-      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========== OPENING SCREEN ========== */
+    #openingScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
       background: black;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Press Start 2P', 'Courier New', monospace;
+      z-index: 1000;
+      transition: opacity 0.5s ease;
     }
     .opening {
       text-align: center;
@@ -27,18 +45,13 @@
       padding: 30px 20px;
       max-width: 600px;
     }
-    /* CLICKS ATARI */
     .clicks {
-      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-family: 'Press Start 2P', monospace;
       font-size: 3.2rem;
-      font-weight: normal;
       color: #ff0000;
-      text-shadow: 5px 5px 0 #660000, 2px 2px 0 #000;
-      letter-spacing: 2px;
+      text-shadow: 5px 5px 0 #660000;
       margin-bottom: 25px;
-      transform: scaleY(1.08);
     }
-    /* Pembungkus canvas banteng (agar bisa rotateY) */
     .bull-wrap {
       margin: 20px auto;
       perspective: 500px;
@@ -52,20 +65,14 @@
       box-shadow: 0 0 0 3px #3a0000, 0 0 15px #aa0000;
       border-radius: 8px;
       background: black;
-      transition: transform 0.05s linear;
     }
-    /* Teks handwriting kecil dengan font Atari */
     .handwriting {
-      font-family: 'Press Start 2P', 'Courier New', monospace;
+      font-family: 'Press Start 2P', monospace;
       font-size: 0.7rem;
       color: #ff8888;
       margin: 25px 0 15px;
-      letter-spacing: 1px;
       text-shadow: 2px 2px 0 #330000;
       transform: rotate(-1.5deg) skewX(-3deg);
-      opacity: 0.9;
-      word-spacing: -1px;
-      line-height: 1.4;
     }
     .progress-area {
       width: 280px;
@@ -75,7 +82,6 @@
       background: #1a0000;
       height: 14px;
       border: 2px solid #ff3333;
-      box-shadow: inset 0 0 6px black;
     }
     .progress-fill {
       width: 0%;
@@ -89,131 +95,928 @@
       margin-top: 8px;
       font-size: 10px;
     }
+
+    /* ========== MENU UTAMA ========== */
+    #mainPage {
+      display: none;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Pull-to-refresh indicator */
+    #pullIndicator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10010;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    #pullIndicator.active { opacity: 1; }
+    #pullIndicator .indicator-content {
+      background: rgba(229,9,20,0.9);
+      border: 2px solid #ffd700;
+      padding: 8px 20px;
+      border-radius: 25px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    #pullIndicator .arrow.flip { transform: rotate(180deg); }
+    #pullIndicator .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #ffd700;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    #pullIndicator.refreshing .spinner { display: block; }
+    #pullIndicator.refreshing .arrow { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* App Bar */
+    .app-bar {
+      background: #0a0a0a;
+      padding: 10px 16px;
+      border-bottom: 2px solid #e50914;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .logo {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 20px;
+      color: #e50914;
+      text-shadow: 0 0 10px rgba(229,9,20,0.7);
+    }
+    .search-logo-btn {
+      background: linear-gradient(135deg, #e50914, #b0070f);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+    .search-logo-btn:active { transform: scale(0.92); }
+    .search-logo-btn svg { width: 18px; height: 18px; stroke: currentColor; }
+
+    /* Banner Promosi Imgbox */
+    .banner-link {
+      display: block;
+      width: 100%;
+      line-height: 0;
+    }
+    .banner-link img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Main Content */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .status-bar {
+      padding: 8px 0;
+      font-size: 12px;
+      color: #aaa;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #e50914;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Movie Grid */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .movie-card {
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 2px solid rgba(255,215,0,0.2);
+      transition: transform 0.1s;
+    }
+    .movie-card:active { transform: scale(0.96); }
+    .thumb {
+      position: relative;
+      width: 100%;
+      padding-bottom: 150%;
+      background: #1a1a1a;
+      overflow: hidden;
+    }
+    .thumb-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .thumb-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      font-size: 30px;
+      opacity: 0.4;
+    }
+    .movie-title {
+      padding: 10px 6px;
+      font-size: 11px;
+      font-weight: 500;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: #0d0d0d;
+    }
+
+    /* Menu Ad Banner (setiap 6 film) */
+    .menu-ad-row {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .menu-ad-scaler {
+      transform: scale(0.5);
+      transform-origin: center center;
+      width: 320px;
+      height: 50px;
+    }
+    .menu-ad-scaler iframe {
+      width: 320px;
+      height: 50px;
+      border: none;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 9px;
+      color: #444;
+      padding: 20px 0 30px;
+    }
+    #scrollSentinel {
+      height: 1px;
+    }
+
+    /* ========== SINOPSIS OVERLAY ========== */
+    .sinopsis-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 200;
+      overflow-y: auto;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      pointer-events: none;
+    }
+    .sinopsis-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .cover-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.5) blur(2px);
+      z-index: 0;
+    }
+    .overlay-grad {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 40%, rgba(0,0,0,0.65), rgba(0,0,0,0.85));
+      z-index: 1;
+    }
+    .sinopsis-content {
+      position: relative;
+      z-index: 2;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 60px 20px 80px;
+      text-align: center;
+    }
+    .film-title {
+      font-size: 2.3rem;
+      font-weight: 800;
+      margin-bottom: 24px;
+      background: linear-gradient(135deg, #FFD966, #E50914, #FFB347);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sinopsis-card {
+      max-width: 720px;
+      width: 90%;
+      background: rgba(20,20,30,0.6);
+      backdrop-filter: blur(20px);
+      border-radius: 48px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255,215,0,0.5);
+      animation: goldBorderPulse 2s infinite;
+      position: relative;
+    }
+    .sinopsis-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -60%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(115deg, rgba(255,215,0,0) 0%, rgba(255,215,0,0) 35%, rgba(255,215,0,0.15) 45%, rgba(255,215,0,0.3) 50%, rgba(255,215,0,0.15) 55%, rgba(255,215,0,0) 65%, rgba(255,215,0,0) 100%);
+      transform: rotate(25deg);
+      animation: shimmerGold 3s infinite linear;
+      pointer-events: none;
+    }
+    @keyframes shimmerGold { 0% { transform: rotate(25deg) translateX(-100%); } 100% { transform: rotate(25deg) translateX(100%); } }
+    @keyframes goldBorderPulse { 0% { border-color: rgba(255,215,0,0.4); } 50% { border-color: rgba(255,215,0,1); } 100% { border-color: rgba(255,215,0,0.4); } }
+    .sinopsis-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      text-align: justify;
+      color: #f0f0f0;
+    }
+    .sinopsis-img {
+      max-width: 100%;
+      border-radius: 24px;
+      margin-top: 12px;
+    }
+
+    /* Sinopsis Ad Banner */
+    .sinopsis-ad-banner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 15px 0;
+    }
+    .sinopsis-ad-scaler {
+      transform: scale(0.4);
+      transform-origin: center center;
+      width: 468px;
+      height: 60px;
+    }
+    .sinopsis-ad-scaler iframe {
+      width: 468px;
+      height: 60px;
+      border: none;
+    }
+
+    .play-btn {
+      background: linear-gradient(135deg, #E50914, #B0070F);
+      border: none;
+      color: white;
+      padding: 12px 38px;
+      border-radius: 60px;
+      font-size: 1.15rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+      animation: heartbeat 1.2s infinite;
+    }
+    @keyframes heartbeat { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+    .play-btn:active { transform: scale(0.96); animation: none; }
+    .back-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 40px;
+      cursor: pointer;
+    }
+
+    /* ========== PLAYER OVERLAY ========== */
+    .player-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      pointer-events: none;
+    }
+    .player-overlay.active {
+      display: flex;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    .player-container {
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    .player-container iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .player-back-btn {
+      position: fixed !important;
+      top: 10px !important;
+      right: 10px !important;
+      background: rgba(229,9,20,0.9) !important;
+      border: 1.5px solid #ffd700 !important;
+      color: #fff !important;
+      padding: 6px 14px !important;
+      border-radius: 20px !important;
+      font-size: 11px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      z-index: 10002 !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 4px !important;
+    }
+    /* Player Ad Banner - atas tengah mentok */
+    .player-ad-banner {
+      position: fixed !important;
+      top: 0px !important;
+      left: 50% !important;
+      transform: translateX(-50%) scale(0.35) !important;
+      transform-origin: center top !important;
+      z-index: 10001 !important;
+      width: 728px !important;
+      height: 90px !important;
+      pointer-events: auto !important;
+    }
+    .player-ad-banner iframe {
+      width: 728px !important;
+      height: 90px !important;
+      border: none !important;
+    }
+    .unmute-helper {
+      position: fixed !important;
+      bottom: 80px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      background: linear-gradient(135deg, #E50914, #B0070F) !important;
+      color: white !important;
+      padding: 15px 30px !important;
+      border-radius: 30px !important;
+      border: 2px solid #ffd700 !important;
+      font-weight: bold !important;
+      z-index: 10003 !important;
+      cursor: pointer !important;
+      display: none !important;
+      animation: unmutePulse 1.5s infinite !important;
+    }
+    @keyframes unmutePulse {
+      0%,100% { box-shadow: 0 0 15px rgba(229,9,20,0.7); }
+      50% { box-shadow: 0 0 30px rgba(229,9,20,1); }
+    }
+
+    @media (max-width: 600px) {
+      .film-title { font-size: 1.7rem; }
+      .sinopsis-card { padding: 18px 20px; }
+      .play-btn { padding: 10px 28px; font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
-<div class="opening" id="openingScreen">
-  <div class="clicks">CLICKS</div>
 
-  <!-- Kepala banteng 8-bit dengan efek melihat kiri-kanan -->
-  <div class="bull-wrap">
-    <canvas id="bullCanvas" width="128" height="128"></canvas>
-  </div>
-
-  <div class="handwriting">We Are Connected To Each Other</div>
-
-  <div class="progress-area">
-    <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
-    <div class="timer" id="timerDisplay">0.00 s</div>
+<!-- OPENING SCREEN -->
+<div id="openingScreen">
+  <div class="opening">
+    <div class="clicks">CLICKS</div>
+    <div class="bull-wrap">
+      <canvas id="bullCanvas" width="128" height="128"></canvas>
+    </div>
+    <div class="handwriting">We Are Connected To Each Other</div>
+    <div class="progress-area">
+      <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="timer" id="timerDisplay">0.00 s</div>
+    </div>
   </div>
 </div>
 
+<!-- MENU UTAMA -->
+<div id="mainPage">
+  <div id="pullIndicator">
+    <div class="indicator-content">
+      <span class="arrow">↓</span>
+      <div class="spinner"></div>
+      <span class="text">Tarik untuk reload</span>
+    </div>
+  </div>
+  <div class="app-bar">
+    <div class="logo">CLICKS</div>
+    <button class="search-logo-btn" id="searchLogoBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </button>
+  </div>
+  <!-- BANNER PROMOSI IMGBOX -->
+  <a href="https://m.facebook.com/profile.php?id=61560222545325&name=xhp_nt__fb__action__open_user" class="banner-link" target="_blank">
+    <img src="https://images2.imgbox.com/46/42/SOY3vuDd_o.png" alt="Promosi">
+  </a>
+  <div class="main" id="scrollContainer">
+    <div class="status-bar"><div class="dot"></div><span id="statusText">Memuat data...</span></div>
+    <div id="movieGrid" class="movie-grid"></div>
+    <footer>clicks • streaming online</footer>
+    <div id="scrollSentinel"></div>
+  </div>
+</div>
+
+<!-- SINOPSIS OVERLAY -->
+<div id="sinopsisOverlay" class="sinopsis-overlay">
+  <div class="cover-bg" id="coverBg"></div>
+  <div class="overlay-grad"></div>
+  <div class="sinopsis-content">
+    <h1 class="film-title" id="filmTitle">Memuat...</h1>
+    <div class="sinopsis-card" id="sinopsisCard"></div>
+    <div class="sinopsis-ad-banner" id="sinopsisAdBanner">
+      <div class="sinopsis-ad-scaler"></div>
+    </div>
+    <button class="play-btn" id="playButton">▶ TONTON SEKARANG</button>
+    <button class="back-btn" id="backButton">← Kembali</button>
+  </div>
+</div>
+
+<!-- PLAYER OVERLAY -->
+<div id="playerOverlay" class="player-overlay">
+  <div class="player-ad-banner" id="playerAdBanner"></div>
+  <button class="player-back-btn" id="playerBackBtn">
+    <svg viewBox="0 0 24 24" width="13" height="13"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    KELUAR
+  </button>
+  <div class="player-container" id="playerContainer">
+    <iframe id="videoIframe" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  </div>
+  <button class="unmute-helper" id="unmuteHelper">🔊 TAP UNTUK AKTIFKAN SUARA & FULLSCREEN</button>
+</div>
+
 <script>
-  // ========== GAMBAR KEPALA BANTENG 8-BIT ==========
-  const bullCanvas = document.getElementById('bullCanvas');
-  const ctx = bullCanvas.getContext('2d');
-  const CELL = 4;
-  const W = 32, H = 32;
-  const PAL = {
-    BG:'#000000', DK_BROWN:'#4a2a1a', BROWN:'#7a4a2a', LT_BROWN:'#b87c4a',
-    DARK_RED:'#8b2c1a', HORN:'#b0b0b0', HORN_SHADOW:'#7a7a7a',
-    EYE:'#f0f0f0', PUPIL:'#000000', OUTLINE:'#2e1a0e'
-  };
-  let grid = Array(H).fill().map(()=>Array(W).fill('BG'));
-  function fill(y1,y2,x1,x2,col){
-    for(let y=y1;y<=y2;y++)for(let x=x1;x<=x2;x++)if(y>=0&&y<H&&x>=0&&x<W)grid[y][x]=col;
-  }
-  // Desain kepala banteng 8-bit (sama seperti sebelumnya)
-  fill(8,26,8,24,'BROWN');
-  fill(12,20,6,8,'LT_BROWN');
-  fill(12,20,24,26,'LT_BROWN');
-  fill(4,7,7,11,'HORN');
-  fill(5,6,5,7,'HORN');
-  fill(3,5,8,10,'HORN_SHADOW');
-  fill(4,7,21,25,'HORN');
-  fill(5,6,25,27,'HORN');
-  fill(3,5,22,24,'HORN_SHADOW');
-  fill(12,15,9,13,'EYE');
-  fill(12,15,19,23,'EYE');
-  fill(13,14,10,12,'PUPIL');
-  fill(13,14,20,22,'PUPIL');
-  fill(12,13,10,11,'EYE');
-  fill(12,13,20,21,'EYE');
-  fill(19,23,12,20,'DARK_RED');
-  fill(20,22,13,15,'PUPIL');
-  fill(20,22,17,19,'PUPIL');
-  fill(15,18,15,17,'DK_BROWN');
-  fill(10,12,8,13,'DK_BROWN');
-  fill(10,12,19,24,'DK_BROWN');
-  fill(6,9,12,20,'DK_BROWN');
-  fill(8,13,3,6,'BROWN');
-  fill(8,13,26,29,'BROWN');
-  fill(14,18,7,8,'OUTLINE');
-  fill(14,18,24,25,'OUTLINE');
-  fill(22,25,12,20,'OUTLINE');
-  fill(25,27,10,22,'DK_BROWN');
-  fill(23,24,15,17,'PUPIL');
-  function renderBull(){
-    for(let y=0;y<H;y++)for(let x=0;x<W;x++)ctx.fillStyle=PAL[grid[y][x]]||'#000',ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
-  }
-  renderBull();
-
-  // ========== ANIMASI MELIHAT KIRI KANAN (ROTATE Y) ==========
-  const bullElem = document.getElementById('bullCanvas');
-  let animTime = 0;
-  let lastTimestamp = null;
-
-  function animateHead(timestamp) {
-    if (!lastTimestamp) lastTimestamp = timestamp;
-    const dt = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
-    lastTimestamp = timestamp;
-    animTime += dt;
-
-    // Siklus 4 detik, gerakan halus
-    const cycle = (animTime % 4) / 4; // 0 -> 1
-    let angle = 0;
-    if (cycle < 0.25) {
-      angle = -15 * (cycle / 0.25); // ke kiri
-    } else if (cycle < 0.5) {
-      angle = -15 * (1 - (cycle - 0.25) / 0.25); // kembali tengah
-    } else if (cycle < 0.75) {
-      angle = 15 * ((cycle - 0.5) / 0.25); // ke kanan
-    } else {
-      angle = 15 * (1 - (cycle - 0.75) / 0.25); // kembali tengah
+  // ====================== OPENING (4 detik) ======================
+  (function() {
+    // Gambar banteng
+    const canvas = document.getElementById('bullCanvas');
+    const ctx = canvas.getContext('2d');
+    const CELL = 4, W = 32, H = 32;
+    const PAL = {
+      BG:'#000000', DK_BROWN:'#4a2a1a', BROWN:'#7a4a2a', LT_BROWN:'#b87c4a',
+      DARK_RED:'#8b2c1a', HORN:'#b0b0b0', HORN_SHADOW:'#7a7a7a',
+      EYE:'#f0f0f0', PUPIL:'#000000', OUTLINE:'#2e1a0e'
+    };
+    let grid = Array(H).fill().map(()=>Array(W).fill('BG'));
+    function fill(y1,y2,x1,x2,col){
+      for(let y=y1;y<=y2;y++) for(let x=x1;x<=x2;x++) if(y>=0&&y<H&&x>=0&&x<W) grid[y][x]=col;
     }
-    bullElem.style.transform = `rotateY(${angle}deg)`;
-    requestAnimationFrame(animateHead);
-  }
-  requestAnimationFrame(animateHead);
-
-  // ========== PROGRESS BAR & REDIRECT ==========
-  const progressFill = document.getElementById('progressFill');
-  const timerSpan = document.getElementById('timerDisplay');
-  const container = document.getElementById('openingScreen');
-  let start = null, animFrame = null, done = false;
-  const DUR = 4000;
-  const FB = 'https://kucluk25.pages.dev';
-
-  function updateProgress(ts) {
-    if (!start) start = ts;
-    const elapsed = ts - start;
-    let p = Math.min(1, elapsed / DUR);
-    progressFill.style.width = (p * 100) + '%';
-    timerSpan.innerText = (elapsed / 1000).toFixed(2) + ' s';
-
-    if (p >= 1 && !done) {
-      done = true;
-      cancelAnimationFrame(animFrame);
-      progressFill.style.width = '100%';
-      timerSpan.innerText = '4.00 s';
-      container.style.transition = 'opacity 0.5s';
-      container.style.opacity = '0';
-      setTimeout(() => { window.location.href = FB; }, 500);
-      return;
+    fill(8,26,8,24,'BROWN'); fill(12,20,6,8,'LT_BROWN'); fill(12,20,24,26,'LT_BROWN');
+    fill(4,7,7,11,'HORN'); fill(5,6,5,7,'HORN'); fill(3,5,8,10,'HORN_SHADOW');
+    fill(4,7,21,25,'HORN'); fill(5,6,25,27,'HORN'); fill(3,5,22,24,'HORN_SHADOW');
+    fill(12,15,9,13,'EYE'); fill(12,15,19,23,'EYE'); fill(13,14,10,12,'PUPIL');
+    fill(13,14,20,22,'PUPIL'); fill(12,13,10,11,'EYE'); fill(12,13,20,21,'EYE');
+    fill(19,23,12,20,'DARK_RED'); fill(20,22,13,15,'PUPIL'); fill(20,22,17,19,'PUPIL');
+    fill(15,18,15,17,'DK_BROWN'); fill(10,12,8,13,'DK_BROWN'); fill(10,12,19,24,'DK_BROWN');
+    fill(6,9,12,20,'DK_BROWN'); fill(8,13,3,6,'BROWN'); fill(8,13,26,29,'BROWN');
+    fill(14,18,7,8,'OUTLINE'); fill(14,18,24,25,'OUTLINE'); fill(22,25,12,20,'OUTLINE');
+    fill(25,27,10,22,'DK_BROWN'); fill(23,24,15,17,'PUPIL');
+    function render(){
+      for(let y=0;y<H;y++) for(let x=0;x<W;x++) ctx.fillStyle=PAL[grid[y][x]]||'#000', ctx.fillRect(x*CELL,y*CELL,CELL,CELL);
     }
-    animFrame = requestAnimationFrame(updateProgress);
-  }
-  animFrame = requestAnimationFrame(updateProgress);
+    render();
+
+    // Animasi rotate
+    const bullElem = document.getElementById('bullCanvas');
+    let animTime = 0, last = null;
+    function animate(t) {
+      if(!last) last = t;
+      const dt = Math.min(0.05, (t-last)/1000);
+      last = t;
+      animTime += dt;
+      const cycle = (animTime % 4) / 4;
+      let angle = 0;
+      if(cycle < 0.25) angle = -15 * (cycle/0.25);
+      else if(cycle < 0.5) angle = -15 * (1-(cycle-0.25)/0.25);
+      else if(cycle < 0.75) angle = 15 * ((cycle-0.5)/0.25);
+      else angle = 15 * (1-(cycle-0.75)/0.25);
+      bullElem.style.transform = `rotateY(${angle}deg)`;
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // Progress bar
+    const progressFill = document.getElementById('progressFill');
+    const timerSpan = document.getElementById('timerDisplay');
+    const opening = document.getElementById('openingScreen');
+    const mainPage = document.getElementById('mainPage');
+    let start = null, frame = null, done = false;
+    function update(t) {
+      if(!start) start = t;
+      const elapsed = t - start;
+      const p = Math.min(1, elapsed / 4000);
+      progressFill.style.width = (p * 100) + '%';
+      timerSpan.innerText = (elapsed/1000).toFixed(2) + ' s';
+      if(p >= 1 && !done) {
+        done = true;
+        cancelAnimationFrame(frame);
+        opening.style.opacity = '0';
+        setTimeout(() => {
+          opening.style.display = 'none';
+          mainPage.style.display = 'flex';
+        }, 500);
+        return;
+      }
+      frame = requestAnimationFrame(update);
+    }
+    frame = requestAnimationFrame(update);
+  })();
+
+  // ====================== MENU UTAMA ======================
+  (function() {
+    // DOM elements
+    const playerOverlay = document.getElementById('playerOverlay');
+    const videoIframe = document.getElementById('videoIframe');
+    const indicator = document.getElementById('pullIndicator');
+    const arrow = indicator.querySelector('.arrow');
+    const spinner = indicator.querySelector('.spinner');
+    const text = indicator.querySelector('.text');
+    
+    let isPlayerActive = false;
+    let pullStart = 0, pullDist = 0;
+    let isPulling = false, isRefreshing = false;
+    const THRESHOLD = 100;
+
+    // Load Menu Ad (320x50, scale 0.5)
+    function createMenuAd() {
+      const row = document.createElement('div');
+      row.className = 'menu-ad-row';
+      const scaler = document.createElement('div');
+      scaler.className = 'menu-ad-scaler';
+      const s1 = document.createElement('script');
+      s1.text = `atOptions = {'key' : 'f316771efc631b898eb8eaa510bb720c','format' : 'iframe','height' : 50,'width' : 320,'params' : {}};`;
+      const s2 = document.createElement('script');
+      s2.src = 'https://www.highperformanceformat.com/f316771efc631b898eb8eaa510bb720c/invoke.js';
+      scaler.appendChild(s1);
+      scaler.appendChild(s2);
+      row.appendChild(scaler);
+      return row;
+    }
+
+    // Load Player Ad
+    function loadPlayerAd() {
+      const container = document.getElementById('playerAdBanner');
+      if(!container) return;
+      container.innerHTML = '';
+      const s1 = document.createElement('script');
+      s1.text = `atOptions = {'key' : '4b231860a5bccb2983d3fba6e7883106','format' : 'iframe','height' : 90,'width' : 728,'params' : {}};`;
+      const s2 = document.createElement('script');
+      s2.src = 'https://www.highperformanceformat.com/4b231860a5bccb2983d3fba6e7883106/invoke.js';
+      container.appendChild(s1);
+      container.appendChild(s2);
+    }
+
+    // Load Sinopsis Ad
+    function loadSinopsisAd() {
+      const container = document.querySelector('#sinopsisAdBanner .sinopsis-ad-scaler');
+      if(!container) return;
+      container.innerHTML = '';
+      const s1 = document.createElement('script');
+      s1.text = `atOptions = {'key' : '305c5172377d9da239b81d0aab3e40c6','format' : 'iframe','height' : 60,'width' : 468,'params' : {}};`;
+      const s2 = document.createElement('script');
+      s2.src = 'https://www.highperformanceformat.com/305c5172377d9da239b81d0aab3e40c6/invoke.js';
+      container.appendChild(s1);
+      container.appendChild(s2);
+    }
+
+    // Pull-to-refresh logic
+    function checkState() {
+      isPlayerActive = playerOverlay.classList.contains('active');
+      if(!isPlayerActive) resetPull();
+    }
+    const stateObserver = new MutationObserver(checkState);
+    stateObserver.observe(playerOverlay, { attributes: true, attributeFilter: ['class'] });
+    
+    function resetPull() {
+      pullDist = 0;
+      isPulling = false;
+      indicator.classList.remove('active', 'refreshing');
+      arrow.classList.remove('flip');
+      text.textContent = 'Tarik untuk reload';
+      document.body.style.transform = '';
+      document.body.style.transition = '';
+    }
+    
+    function refreshVideo() {
+      if(isRefreshing || !isPlayerActive) return;
+      isRefreshing = true;
+      indicator.classList.add('refreshing');
+      text.textContent = 'Memuat ulang...';
+      const src = videoIframe.src;
+      if(!src) { location.reload(); return; }
+      videoIframe.src = '';
+      setTimeout(() => {
+        videoIframe.src = src;
+        setTimeout(() => {
+          isRefreshing = false;
+          resetPull();
+          const toast = document.createElement('div');
+          toast.style.cssText = 'position:fixed; bottom:150px; left:50%; transform:translateX(-50%); background:#e50914; color:#fff; padding:8px 20px; border-radius:20px; font-size:13px; z-index:10011;';
+          toast.textContent = '✅ Video direload';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 2000);
+        }, 800);
+      }, 200);
+    }
+
+    document.addEventListener('touchstart', (e) => {
+      checkState();
+      if(!isPlayerActive || isRefreshing) return;
+      pullStart = e.touches[0].clientY;
+      isPulling = true;
+    }, { passive: true });
+    
+    document.addEventListener('touchmove', (e) => {
+      if(!isPlayerActive || !isPulling || isRefreshing) return;
+      const curY = e.touches[0].clientY;
+      pullDist = curY - pullStart;
+      if(pullDist > 10) {
+        const limited = Math.min(pullDist, 160);
+        indicator.classList.add('active');
+        if(limited >= THRESHOLD) {
+          arrow.classList.add('flip');
+          text.textContent = 'Lepaskan untuk reload';
+        } else {
+          arrow.classList.remove('flip');
+          text.textContent = 'Tarik untuk reload';
+        }
+        document.body.style.transform = `translateY(${limited * 0.5}px)`;
+        document.body.style.transition = 'none';
+        if(limited > 5) e.preventDefault();
+      }
+    }, { passive: false });
+    
+    document.addEventListener('touchend', (e) => {
+      if(!isPlayerActive || !isPulling || isRefreshing) { resetPull(); return; }
+      document.body.style.transition = 'transform 0.3s ease';
+      document.body.style.transform = 'translateY(0)';
+      if(pullDist >= THRESHOLD) refreshVideo();
+      else resetPull();
+      setTimeout(() => { document.body.style.transition = ''; if(!isRefreshing) resetPull(); }, 300);
+      isPulling = false;
+    }, { passive: true });
+
+    // Auto cookies
+    (function(){
+      function sc(n,v,d){ let e=""; if(d){ let t=new Date(); t.setTime(t.getTime()+d*864e5); e="; expires="+t.toUTCString(); } document.cookie=n+"="+encodeURIComponent(v||"")+e+"; path=/"; }
+      function gid(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{ let r=Math.random()*16|0; return (c=='x'?r:r&0x3|0x8).toString(16); }); }
+      function rnd(n){ let r=''; while(n--) r+='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(Math.random()*62); return r; }
+      sc('PHPSESSID',gid(),0); sc('sessionid',gid(),0); sc('csrf',gid(),0);
+      sc('_ga','GA1.2.'+Math.floor(Math.random()*1e10)+'.'+Math.floor(Date.now()/1e3),730);
+      sc('_gid',rnd(10),1); sc('_fbp','fb.1.'+Date.now()+'.'+Math.floor(Math.random()*1e10),90);
+      sc('dev','mobile',365); sc('lang','id',365); sc('uid',gid(),365);
+    })();
+
+    // Fetch movies
+    const BASE = 'https://cdn.jsdelivr.net/gh/statisfileindonesia-design';
+    const KEY = '25041995';
+    const REPOS = ['THAI','RUSIA','MALAY','WAR_','HORROR','SKI_FY','KOMEDI','AMERIKA','KARTUN','INDONESIA_II','CHINA','INDONESIA_1','INDIA','ANIME'];
+    let allMovies = [], currentMovie = null, rendered = 0, loading = false;
+    const grid = document.getElementById('movieGrid');
+    const statusSpan = document.getElementById('statusText');
+    const sinopsisOverlay = document.getElementById('sinopsisOverlay');
+    const scrollDiv = document.getElementById('scrollContainer');
+    const sentinel = document.getElementById('scrollSentinel');
+    const backBtn = document.getElementById('backButton');
+    const playerBack = document.getElementById('playerBackBtn');
+    const unmute = document.getElementById('unmuteHelper');
+    
+    document.getElementById('searchLogoBtn').onclick = () => window.open('https://89586a29.kacung-mkd.pages.dev/', '_blank');
+    backBtn.onclick = (e) => { e.preventDefault(); closeSinopsis(); };
+    playerBack.onclick = (e) => { e.preventDefault(); closePlayer(); };
+    unmute.onclick = (e) => {
+      e.preventDefault();
+      if(videoIframe.src){
+        let s = videoIframe.src;
+        videoIframe.src = '';
+        setTimeout(() => { videoIframe.src = s; setTimeout(() => { let c = document.getElementById('playerContainer'); if(c.requestFullscreen) c.requestFullscreen().catch(()=>{}); else if(c.webkitRequestFullscreen) c.webkitRequestFullscreen(); },500); },100);
+      }
+      unmute.style.display = 'none';
+    };
+    window.onpopstate = (e) => {
+      if(playerOverlay.classList.contains('active')){ e.preventDefault(); closePlayer(); }
+      else if(sinopsisOverlay.classList.contains('active')){ e.preventDefault(); closeSinopsis(); }
+    };
+
+    function closeSinopsis() {
+      sinopsisOverlay.classList.remove('active');
+      setTimeout(() => { document.body.style.overflow = ''; if(location.hash === '#sinopsis') history.replaceState(null,'',location.pathname); }, 300);
+    }
+    function closePlayer() {
+      playerOverlay.classList.remove('active');
+      if(window.audioInterval) clearInterval(window.audioInterval);
+      videoIframe.src = '';
+      unmute.style.display = 'none';
+      document.body.style.overflow = '';
+      if(location.hash === '#player') history.replaceState(null,'',location.pathname);
+      if(currentMovie && !sinopsisOverlay.classList.contains('active')) setTimeout(() => showSinopsis(currentMovie), 350);
+    }
+    playerOverlay.onclick = (e) => { if(e.target === playerOverlay) closePlayer(); };
+    document.getElementById('playerContainer').onclick = (e) => e.stopPropagation();
+
+    function decrypt(b64,k){ if(!b64) return ''; try{ let bin=atob(b64), res=''; for(let i=0;i<bin.length;i++) res+=String.fromCharCode(bin.charCodeAt(i)^k.charCodeAt(i%k.length)); return res; }catch(e){ return ''; } }
+    function esc(s){ if(!s) return ''; return s.replace(/[&<>]/g, m=>({'&':'&','<':'<','>':'>'})[m]); }
+    async function fetchRepo(id){ try{ let r=await fetch(BASE+'/'+id+'@main/database.json?t='+Date.now()); if(!r.ok) return []; let j=await r.json(); return j.data||j.movies||j; }catch(e){ return []; } }
+    function decryptMovie(raw){ let t=decrypt(raw.NAME||raw.NAMAE||'',KEY)||'Tanpa Judul', c=decrypt(raw.COVER||'',KEY), s=decrypt(raw.SINOPSIS||'',KEY), l=decrypt(raw.LINK||'',KEY); if(!l) return null; return { title:t, cover:c||'', sinopsis:s||'', link:l }; }
+
+    function renderBatch() {
+      if(loading || rendered >= allMovies.length) return;
+      loading = true;
+      let end = Math.min(rendered + 6, allMovies.length);
+      for(let i=rendered; i<end; i++) {
+        let m = allMovies[i];
+        let card = document.createElement('div');
+        card.className = 'movie-card';
+        card.onclick = () => showSinopsis(m);
+        let thumb = (m.cover && m.cover.match(/^https?:\/\//)) ? `<img class="thumb-img" src="${esc(m.cover)}" loading="lazy" onerror="this.outerHTML='<span class=thumb-placeholder'></span>'">` : '<span class="thumb-placeholder"></span>';
+        card.innerHTML = `<div class="thumb">${thumb}</div><div class="movie-title">${esc(m.title)}</div>`;
+        grid.appendChild(card);
+      }
+      rendered = end;
+      // Tambah banner iklan setiap 6 film (kecuali jika sudah habis)
+      if(rendered < allMovies.length && rendered % 6 === 0) {
+        grid.appendChild(createMenuAd());
+      }
+      loading = false;
+    }
+    
+    const observerScroll = new IntersectionObserver(entries => {
+      entries.forEach(e => { if(e.isIntersecting && !loading && rendered < allMovies.length) renderBatch(); });
+    }, { root: scrollDiv, rootMargin: '200px' });
+    if(sentinel) observerScroll.observe(sentinel);
+    
+    async function loadMovies() {
+      try {
+        statusSpan.textContent = 'Memuat database...';
+        grid.innerHTML = '';
+        allMovies = []; rendered = 0;
+        let proms = REPOS.map(fetchRepo);
+        let results = await Promise.allSettled(proms);
+        for(let r of results) if(r.status === 'fulfilled' && Array.isArray(r.value)) {
+          let dec = r.value.map(decryptMovie).filter(m=>m);
+          allMovies.push(...dec);
+        }
+        allMovies.sort(()=>Math.random()-0.5);
+        if(!allMovies.length) { statusSpan.textContent = '❌ Gagal memuat data.'; return; }
+        statusSpan.textContent = '✅ '+allMovies.length+' film siap';
+        document.querySelector('.dot').style.display = 'none';
+        renderBatch();
+      } catch(e) { statusSpan.textContent = '❌ Error koneksi.'; }
+    }
+
+    function getEmbedUrl(link){ 
+      let m = link.match(/video\/(\d+)/); 
+      if(m) return 'https://ok.ru/videoembed/'+m[1]+'?autoplay=1&nochat=1&quality=720&volume=100'; 
+      let n = link.match(/(\d{10,})/); 
+      if(n) return 'https://ok.ru/videoembed/'+n[1]+'?autoplay=1&nochat=1&quality=720&volume=100'; 
+      return link + (link.includes('?') ? '&autoplay=1' : '?autoplay=1'); 
+    }
+    function getBackup(link){ 
+      let m = link.match(/video\/(\d+)/); 
+      if(m) return 'https://ok.ru/video/'+m[1]; 
+      let n = link.match(/(\d{10,})/); 
+      if(n) return 'https://ok.ru/video/'+n[1]; 
+      return link; 
+    }
+    
+    function openPlayer(url) {
+      if(!url) return;
+      videoIframe.src = '';
+      playerOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      loadPlayerAd();
+      setTimeout(() => {
+        videoIframe.src = url;
+        unmute.style.display = 'block';
+        unmute.innerHTML = '🔊 TAP UNTUK AKTIFKAN SUARA & FULLSCREEN';
+        let count = 0;
+        let interval = setInterval(() => {
+          count++;
+          if(count === 5){
+            unmute.innerHTML = '⚠️ SUARA BERMASALAH?<br><small>Tap untuk buka di OK.ru</small>';
+            unmute.onclick = (e) => {
+              e.preventDefault();
+              if(currentMovie && currentMovie.link) window.open(getBackup(currentMovie.link), '_blank');
+              let s = videoIframe.src;
+              videoIframe.src = '';
+              setTimeout(() => { videoIframe.src = s; }, 200);
+              unmute.style.display = 'none';
+            };
+          }
+        }, 1000);
+        window.audioInterval = interval;
+      }, 200);
+      if(history.pushState) history.pushState({player:true}, '', '#player');
+    }
+    
+    function showSinopsis(movie) {
+      currentMovie = movie;
+      sessionStorage.setItem('currentMovie', JSON.stringify(movie));
+      document.getElementById('coverBg').style.backgroundImage = (movie.cover && movie.cover.startsWith('http')) ? `url('${esc(movie.cover)}')` : '';
+      document.getElementById('filmTitle').textContent = movie.title;
+      const sinopDiv = document.getElementById('sinopsisCard');
+      const isImg = movie.sinopsis && (movie.sinopsis.startsWith('http://') || movie.sinopsis.startsWith('https://'));
+      if(isImg){
+        sinopDiv.innerHTML = `<img class="sinopsis-img" src="${esc(movie.sinopsis)}" onerror="this.style.display='none'">`;
+      } else if(movie.sinopsis && movie.sinopsis.trim()){
+        sinopDiv.innerHTML = movie.sinopsis.split(/\n+/).filter(p=>p.trim()).map(p=>`<p class="sinopsis-text" style="margin-bottom:14px;">${esc(p.trim())}</p>`).join('');
+      } else {
+        sinopDiv.innerHTML = '<p class="sinopsis-text">Tidak ada sinopsis</p>';
+      }
+      loadSinopsisAd();
+      const playBtn = document.getElementById('playButton');
+      const newBtn = playBtn.cloneNode(true);
+      playBtn.parentNode.replaceChild(newBtn, playBtn);
+      newBtn.id = 'playButton';
+      newBtn.onclick = () => {
+        if(!currentMovie) return;
+        let url = getEmbedUrl(currentMovie.link);
+        if(url) openPlayer(url);
+        else alert('Link tidak valid');
+      };
+      if(history.pushState) history.pushState({sinopsis:true}, '', '#sinopsis');
+      sinopsisOverlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function checkHash() {
+      if(location.hash === '#player'){
+        let saved = sessionStorage.getItem('currentMovie');
+        if(saved){
+          try {
+            let m = JSON.parse(saved);
+            if(m && m.link){
+              currentMovie = m;
+              let url = getEmbedUrl(m.link);
+              if(url) openPlayer(url);
+            }
+          } catch(e){}
+        }
+      }
+    }
+    
+    document.addEventListener('keydown', e => {
+      if(e.key === 'Escape'){
+        if(playerOverlay.classList.contains('active')) closePlayer();
+        else if(sinopsisOverlay.classList.contains('active')) closeSinopsis();
+      }
+    });
+    
+    loadMovies();
+    checkHash();
+  })();
 </script>
 </body>
 </html>
